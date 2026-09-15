@@ -271,7 +271,7 @@ function BriefInner({ ctx }: { ctx: QueryContext }) {
       <h1 className="text-2xl font-semibold text-navy">Switch Brief</h1>
       <p className="text-[12px]">Synthetic demo — illustrative findings; not evidence of real brand performance</p>
       <p className="text-[12px]">
-        {filter.dateFrom}–{filter.dateTo} · {ctx.workspace.reviewMode} · brands {cmp.join(", ")} · dataset {ctx.datasetVersion}
+        {filter.dateFrom}–{filter.dateTo} · {ctx.workspace.reviewMode} · TOZO vs Apple, Sony, JLab, Jabra · dataset {ctx.datasetVersion}
       </p>
       <ol className="list-decimal space-y-2 pl-5">
         {findings.map((f, i) => (

@@ -45,7 +45,7 @@ test("marketing and analysis loop", async ({ page }) => {
   await page.goto("/demo/ready");
   await page.getByRole("button", { name: /restore demo scenario/i }).click();
   await expect(page.getByRole("heading", { name: /switch radar/i })).toBeVisible({ timeout: 90_000 });
-  await expect(page.getByText(/competitive exposure/i).first()).toBeVisible();
+  await expect(page.getByText(/suggested next step/i)).toBeVisible();
   await page.screenshot({ path: path.join(shotDir, "switch_radar_ready.png"), fullPage: true });
 
   await page.getByRole("link", { name: "Dashboard" }).click();

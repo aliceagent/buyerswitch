@@ -5,7 +5,7 @@ export const HERO_STORY = {
   topic: "Ergonomics",
   headline: "Apple leads on fit. TOZO trails in this synthetic scenario.",
   gapLabel: "Competitive exposure",
-  nLabel: "Supported · 1,460 distinct reviews on the TOZO side",
+  nLabel: "Supported finding in the synthetic Wireless Earphones scenario",
   appleQuote: "They stay seated on long walks. I forget they are in.",
   appleWho: "Illustrative Apple review",
   tozoQuote: "They slip when I look down. I keep reseating the buds.",
