@@ -1,0 +1,15 @@
+# BuyerSwitch demo rules — revision 2
+
+Read README.md, docs/00-overview.md and the assigned sprint first. Follow the dependency order in README, not numeric filename order. Implement only the assigned sprint and its explicitly listed prerequisite subset. Do not start another sprint automatically.
+
+- This is a browser-only synthetic demo. No real credentials/cards, backend, LLM, CRM, analytics, email, invitations, scheduling or payment processing.
+- All calculations and text claims derive from record-level data through query.ts. Never fabricate pagination, source links, metrics or precision.
+- metrics-and-evidence.md is authoritative for scope, support, deltas and ranking.
+- Labels must distinguish synthetic examples, observed opinions, hypotheses and actual switching evidence.
+- Version and isolate persisted state by user and workspace. Reject stale async responses.
+- Use the exact resolved stack and lockfile described in overview. TypeScript strict, no any or suppressed errors.
+- Shared formatters, components and design tokens; CSS variables for UI, resolved literal colors for chart exports.
+- Preserve null metrics and explicit no-data states. No spinner can remain indefinitely.
+- Run meaningful sprint checks and report results honestly. The plan's performance and quality targets are not test results.
+- Make routine implementation decisions using the contracts; record consequential deviations in docs/BUILD-LOG.md. Do not ask for a preference that the contract already resolves.
+- Do not replace these instructions or the root README with generated boilerplate.

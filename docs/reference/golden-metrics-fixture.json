@@ -1,0 +1,88 @@
+{
+  "purpose": "Small golden calculation fixture for future query tests; independent of the full seed generator.",
+  "reviews": [
+    {
+      "id": "r1",
+      "stars": 2,
+      "topics": [
+        "audio",
+        "battery"
+      ],
+      "sentiments": [
+        "positive",
+        "negative"
+      ]
+    },
+    {
+      "id": "r2",
+      "stars": 5,
+      "topics": [
+        "audio",
+        "battery"
+      ],
+      "sentiments": [
+        "positive",
+        "negative"
+      ]
+    },
+    {
+      "id": "r3",
+      "stars": 5,
+      "topics": [
+        "audio",
+        "audio"
+      ],
+      "sentiments": [
+        "neutral",
+        "neutral"
+      ]
+    },
+    {
+      "id": "r4",
+      "stars": 1,
+      "topics": [
+        "battery",
+        "ergonomics"
+      ],
+      "sentiments": [
+        "positive",
+        "negative"
+      ]
+    }
+  ],
+  "occurrences": [
+    "r1",
+    "r2",
+    "r3",
+    "r4",
+    "r1"
+  ],
+  "expected": {
+    "unique": {
+      "reviews": 4,
+      "quotes": 8,
+      "positiveShare": 37.5,
+      "averageStars": 3.25
+    },
+    "all": {
+      "reviews": 5,
+      "quotes": 10,
+      "positiveShare": 40.0,
+      "averageStars": 3.0
+    },
+    "audioUnique": {
+      "mentioningReviews": 3,
+      "topicQuotes": 4,
+      "mentionShare": 75.0,
+      "topicPositiveShare": 50.0
+    },
+    "audioOrBatteryUnique": {
+      "matchingReviews": 4
+    },
+    "r1BatteryCorrectedToPositive": {
+      "uniquePositiveShare": 50.0,
+      "allPositiveShare": 60.0
+    },
+    "support": "insufficient for all Radar rankings"
+  }
+}
