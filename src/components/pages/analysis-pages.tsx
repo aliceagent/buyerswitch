@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { query } from "@/lib/query";
 import { DemoGate } from "@/components/layout/demo-gate";
@@ -160,6 +160,8 @@ const EMPTY_DRAFTS: Record<string, { hypothesis: string; ownerRole: string; test
 
 function RadarInner({ ctx }: { ctx: QueryContext }) {
   const { filter, cmp, apply } = useFilters();
+  const sp = useSearchParams();
+  const briefHref = `/switch-radar/brief${sp.toString() ? `?${sp.toString()}` : ""}`;
   const [ready, setReady] = useState(false);
   useEffect(() => {
     let live = true;
@@ -197,7 +199,6 @@ function RadarInner({ ctx }: { ctx: QueryContext }) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-xl font-semibold text-navy">Switch Radar</h1>
-          <p className="text-[12px] text-ink-muted">Illustrative review differences, not measured switching or purchase intent.</p>
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={() => exportExcel(ctx, filter, cmp)}>
@@ -206,7 +207,7 @@ function RadarInner({ ctx }: { ctx: QueryContext }) {
           <Button size="sm" variant="outline" onClick={() => exportPptx(ctx, filter, cmp)}>
             Download PowerPoint
           </Button>
-          <Link href="/switch-radar/brief" className="rounded border border-border px-3 py-1 text-[13px]">
+          <Link href={briefHref} className="rounded border border-border px-3 py-1 text-[13px]">
             Print brief
           </Link>
         </div>

@@ -34,7 +34,7 @@ export function SearchPalette({
       });
     }, 200);
     return () => clearTimeout(t);
-  }, [open, term, ctx.userId, ctx.workspace.id, ctx.overlayRevision, filter.dateFrom, filter.dateTo]);
+  }, [open, term, ctx, filter]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

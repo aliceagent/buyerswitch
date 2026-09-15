@@ -826,7 +826,11 @@ function main() {
 
   const reviewsForDisk = reviews.map((r) => ({
     ...r,
-    quotes: r.quotes.map(({ text: _text, ...q }) => q),
+    quotes: r.quotes.map((q) => {
+      const { text: _quoteText, ...rest } = q;
+      void _quoteText;
+      return rest;
+    }),
   }));
   const entitiesBuf = writeJson("entities.json", entities);
   const topicsBuf = writeJson("topics.json", topics);

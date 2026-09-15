@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Wordmark } from "@/components/brand/primitives";
 import { useAuthStore } from "@/stores/auth";
 import { useWorkspaceStore } from "@/stores/workspace";
@@ -36,6 +36,9 @@ export function AppShell({
   print?: boolean;
 }) {
   const path = usePathname();
+  const sp = useSearchParams();
+  const q = sp.toString();
+  const hrefWithState = (href: string) => (q ? `${href}?${q}` : href);
   const user = useAuthStore((s) => s.profiles.find((p) => p.id === s.selectedProfileId));
   const workspaces = useWorkspaceStore((s) => s.byUser[ctx.userId]?.workspaces ?? EMPTY_WORKSPACES);
   const setActive = useWorkspaceStore((s) => s.setActive);
@@ -57,28 +60,28 @@ export function AppShell({
           {NAV.map((item) => (
             <Link
               key={item.href}
-              href={item.href}
+              href={hrefWithState(item.href)}
               className={`rounded px-3 py-2 text-[13px] ${path.startsWith(item.href) ? "bg-lightblue text-white" : "text-white/80 hover:bg-white/10"}`}
             >
               {item.label}
             </Link>
           ))}
           <div className="mt-4 px-3 text-[10px] uppercase tracking-wide text-white/50">Settings</div>
-          <Link href="/settings/workspace" className="rounded px-3 py-2 text-[13px] text-white/80 hover:bg-white/10">
+          <Link href={hrefWithState("/settings/workspace")} className="rounded px-3 py-2 text-[13px] text-white/80 hover:bg-white/10">
             Workspace
           </Link>
-          <Link href="/settings/groups" className="rounded px-3 py-2 text-[13px] text-white/80 hover:bg-white/10">
+          <Link href={hrefWithState("/settings/groups")} className="rounded px-3 py-2 text-[13px] text-white/80 hover:bg-white/10">
             Groups
           </Link>
-          <Link href="/settings/users" className="rounded px-3 py-2 text-[13px] text-white/80 hover:bg-white/10">
+          <Link href={hrefWithState("/settings/users")} className="rounded px-3 py-2 text-[13px] text-white/80 hover:bg-white/10">
             Users
           </Link>
-          <Link href="/settings/qa" className="rounded px-3 py-2 text-[13px] text-white/80 hover:bg-white/10">
+          <Link href={hrefWithState("/settings/qa")} className="rounded px-3 py-2 text-[13px] text-white/80 hover:bg-white/10">
             Data QA
           </Link>
         </nav>
         <div className="space-y-1 p-3 text-[11px] text-white/60">
-          <Link href="/switch-radar/brief" className="block hover:text-white">
+          <Link href={hrefWithState("/switch-radar/brief")} className="block hover:text-white">
             Print brief
           </Link>
           <span>Exports: Excel · PowerPoint</span>
