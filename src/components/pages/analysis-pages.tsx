@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { query } from "@/lib/query";
 import { DemoGate } from "@/components/layout/demo-gate";
 import { useFilters } from "@/components/filters/filter-bar";
 import { KpiStrip, WidgetCard } from "@/components/widgets/kpi-strip";
 import { EmptyState, LoadingState } from "@/components/brand/primitives";
 import { formatPercent, SOURCE_LABELS } from "@/lib/format";
-import { ENTITY_COLORS_LIGHT, INDUSTRY_COLOR, SENTIMENT_COLORS_LIGHT, sentimentBucket } from "@/lib/chart-colors";
+import { ENTITY_COLORS_LIGHT, INDUSTRY_COLOR } from "@/lib/chart-colors";
 import { useDraftStore, useViewsStore } from "@/stores/app-stores";
 import type { QueryContext, RadarFinding, TopicRow } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -44,25 +44,26 @@ function TopicsInner({ ctx }: { ctx: QueryContext }) {
           <SummaryCard title="Most negative (supported)" row={sum.mostNegative} />
         </div>
       )}
-      <div className="h-[480px] overflow-x-auto">
-        <div style={{ width: Math.max(640, chart.length * 36) }} className="h-full">
-          <ResponsiveContainer>
-            <BarChart data={chart} layout="vertical" margin={{ left: 120 }}>
-              <CartesianGrid stroke="var(--border)" />
-              <XAxis type="number" tick={{ fontSize: 11 }} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={118} />
-              <Tooltip />
-              <Bar dataKey="mentionShare" onClick={(d) => {
-                const row = d as unknown as TopicRow;
-                apply({ ...filter, topicIds: [row.topicId] }, cmp);
-              }}>
-                {chart.map((r) => (
-                  <Cell key={r.topicId} fill={SENTIMENT_COLORS_LIGHT[sentimentBucket(r.sentiment ?? 0, 70)]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+      <div className="space-y-1 overflow-x-auto rounded-lg border border-border bg-surface p-3">
+        {chart.map((r) => (
+          <button
+            key={r.topicId}
+            type="button"
+            className="flex w-full items-center gap-3 text-left"
+            onClick={() => apply({ ...filter, topicIds: [r.topicId] }, cmp)}
+          >
+            <span className="w-40 shrink-0 truncate text-[12px] text-ink">{r.name}</span>
+            <span className="relative h-3 min-w-[200px] flex-1 rounded bg-muted">
+              <span
+                className="absolute inset-y-0 left-0 rounded bg-lightblue"
+                style={{ width: `${Math.min(100, r.mentionShare ?? 0)}%` }}
+              />
+            </span>
+            <span className="w-16 shrink-0 text-right text-[12px] tabular text-ink-muted">
+              {formatPercent(r.mentionShare)}
+            </span>
+          </button>
+        ))}
       </div>
       <ul className="columns-2 text-[13px] md:columns-3">
         {leaves.map((r) => (
