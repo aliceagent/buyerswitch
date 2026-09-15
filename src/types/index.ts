@@ -182,6 +182,28 @@ export interface EvidenceRef {
   entityId: string;
 }
 
+export interface EvidenceDisplay {
+  quoteId: string;
+  reviewId: string;
+  entityId: string;
+  entityName: string;
+  quoteText: string;
+  reviewText: string;
+  charStart: number;
+  charEnd: number;
+  stars: 1 | 2 | 3 | 4 | 5;
+  source: SourceSlug;
+  postDate: string;
+}
+
+export interface TopicEntityBar {
+  entityId: string;
+  name: string;
+  mentionShare: number | null;
+  sentiment: number | null;
+  distinctReviewN: number;
+}
+
 export interface RadarFinding {
   id: string;
   panel: RadarPanel;

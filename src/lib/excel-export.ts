@@ -23,15 +23,22 @@ export async function exportExcel(ctx: QueryContext, filter: FilterState, cmp: s
   cover.addRow(["Reviews in scope", kpis.meta.reviewUnits]);
   cover.addRow(["Distinct reviews", kpis.meta.distinctReviewN]);
   const findings = wb.addWorksheet(sanitizeSheetName("Findings", used));
-  findings.addRow(["panel", "topic", "statement", "priority", "n"]);
+  findings.addRow(["panel", "topic", "statement", "n"]);
   for (const f of radar.data.findings) {
     findings.addRow([
       asExcelText(f.panel),
       asExcelText(f.topicId),
       asExcelText(f.statement),
-      f.priorityScore,
       f.denominators.entityN ?? 0,
     ]);
+  }
+  const excerpts = wb.addWorksheet(sanitizeSheetName("Excerpts", used));
+  excerpts.addRow(["entity", "stars", "date", "source", "quote"]);
+  const hero = radar.data.findings.find((f) => f.panel === "exposure") ?? radar.data.findings[0];
+  if (hero) {
+    for (const row of query.getEvidencePack(hero).slice(0, 4)) {
+      excerpts.addRow([row.entityName, row.stars, row.postDate, row.source, asExcelText(row.quoteText)]);
+    }
   }
   const buf = await wb.xlsx.writeBuffer();
   const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });

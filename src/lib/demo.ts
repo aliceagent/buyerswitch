@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { loadCorpus, resetQueryLoad } from "@/lib/query";
+import { RADAR_SCENARIO_HREF } from "@/lib/scenario";
 import type { Corpus, FilterState, QueryContext, Workspace } from "@/types";
 import { useAuthStore, ALEX } from "@/stores/auth";
 import { DEFAULT_WORKSPACE, useWorkspaceStore } from "@/stores/workspace";
@@ -159,4 +160,12 @@ export function useQueryContext(corpus: Corpus | null): QueryContext | null {
 
 export function onContextChange(): void {
   clearQueryCache();
+}
+
+export async function openDemoScenario(): Promise<string> {
+  const { rehydrateStores } = await import("@/lib/hydrate");
+  await rehydrateStores();
+  const corpus = await loadCorpus();
+  seedDemoProfile(corpus);
+  return RADAR_SCENARIO_HREF;
 }

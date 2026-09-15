@@ -7,29 +7,59 @@ import { Button } from "@/components/ui/button";
 import { useAuthStore, ALEX, JORDAN } from "@/stores/auth";
 import { useBillingStore } from "@/stores/app-stores";
 import { useWorkspaceStore } from "@/stores/workspace";
-import { seedDemoProfile, useCorpus } from "@/lib/demo";
+import { openDemoScenario, seedDemoProfile, useCorpus } from "@/lib/demo";
 import { ErrorState, LoadingState } from "@/components/brand/primitives";
-import { query } from "@/lib/query";
-import { useState } from "react";
+import { loadCorpus } from "@/lib/query";
+import { HERO_STORY } from "@/lib/scenario";
+import { useEffect, useState } from "react";
 
 export function MarketingHome() {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    void loadCorpus();
+  }, []);
   return (
     <MarketingFrame>
-      <div className="mx-auto max-w-4xl px-6 py-16">
+      <div className="mx-auto max-w-5xl px-6 py-12">
         <p className="text-[12px] uppercase tracking-wide text-lightblue">Interactive concept · Synthetic data</p>
         <h1 className="font-editorial mt-3 text-4xl text-navy md:text-5xl">
           See where competitors win on the things buyers talk about.
         </h1>
         <p className="mt-4 max-w-2xl text-base text-ink-muted">
-          Compare product strengths and complaints, inspect the evidence, and decide what to investigate next. Explore the BuyerSwitch concept with a synthetic audio-category dataset.
+          Identify a supported attribute gap, read both sides, and leave with a next step. This scenario uses a synthetic audio-category dataset.
         </p>
-        <div className="mt-6 flex gap-3">
-          <Link href="/demo/ready" className="rounded bg-lightblue px-4 py-2 text-white">
-            Explore demo
-          </Link>
-          <Link href="/signup" className="rounded border border-border px-4 py-2">
-            Preview setup
-          </Link>
+        <div className="mt-8 rounded-xl border border-border bg-surface-muted p-5">
+          <p className="text-[11px] uppercase tracking-wide text-ink-muted">{HERO_STORY.gapLabel}</p>
+          <h2 className="mt-1 font-editorial text-2xl text-navy">{HERO_STORY.headline}</h2>
+          <p className="mt-2 text-[13px] text-ink-muted">{HERO_STORY.nLabel}</p>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <blockquote className="rounded-lg border border-border bg-white p-3 text-[14px]">
+              <p className="text-[11px] text-ink-muted">{HERO_STORY.appleWho}</p>
+              <p className="mt-1">“{HERO_STORY.appleQuote}”</p>
+            </blockquote>
+            <blockquote className="rounded-lg border border-border bg-white p-3 text-[14px]">
+              <p className="text-[11px] text-ink-muted">{HERO_STORY.tozoWho}</p>
+              <p className="mt-1">“{HERO_STORY.tozoQuote}”</p>
+            </blockquote>
+          </div>
+          <p className="mt-4 text-[13px] text-navy">
+            Suggested next step: {HERO_STORY.nextStep}
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Button
+              disabled={busy}
+              onClick={() => {
+                setBusy(true);
+                void openDemoScenario().then((href) => router.push(href));
+              }}
+            >
+              {busy ? "Opening scenario…" : "Open this scenario"}
+            </Button>
+            <Link href="/product" className="rounded border border-border px-4 py-2 text-[13px]">
+              How it works
+            </Link>
+          </div>
         </div>
         <p className="mt-8 max-w-2xl text-[13px] text-ink-muted">
           Reviews describe what reviewers experienced. They do not establish why non-buyers chose a competitor or measure market share, switching rates or causal sales impact.
@@ -47,12 +77,12 @@ function MarketingFrame({ children }: { children: React.ReactNode }) {
         <nav className="flex gap-4 text-[13px]">
           <Link href="/product">Product</Link>
           <Link href="/pricing">Pricing</Link>
-          <Link href="/demo/ready">Explore demo</Link>
+          <Link href="/">Open scenario</Link>
         </nav>
       </header>
       {children}
       <footer className="border-t border-border px-6 py-8 text-[12px] text-ink-muted">
-        <Link href="/product">Product</Link> · <Link href="/pricing">Pricing</Link> · <Link href="/demo/ready">Demo</Link>
+        <Link href="/">Demo</Link>
         <p className="mt-2">Concept frontend. No live collection, payments, or CRM.</p>
       </footer>
     </div>
@@ -309,10 +339,8 @@ function AuthFrame({ title, children }: { title: string; children: React.ReactNo
 }
 
 export function DemoReadyPage() {
-  const { corpus, error, retry, loading } = useCorpus();
   const router = useRouter();
-  if (loading) return <LoadingState />;
-  if (error || !corpus) return <ErrorState title="Corpus unavailable" body={error ?? ""} onRetry={retry} />;
+  const [busy, setBusy] = useState(false);
   return (
     <div className="mx-auto max-w-lg p-8">
       <h1 className="text-2xl font-semibold text-navy">Demo ready</h1>
@@ -321,12 +349,10 @@ export function DemoReadyPage() {
       </p>
       <Button
         className="mt-4"
+        disabled={busy}
         onClick={() => {
-          seedDemoProfile(corpus);
-          void query.ensure();
-          router.push(
-            "/switch-radar?h=wireless-earphones&cmp=b:tozo,b:apple,b:sony,b:jlab,b:jabra&from=2019-01-01&to=2021-10-31&v=2&w=ws-audio-us-ca",
-          );
+          setBusy(true);
+          void openDemoScenario().then((href) => router.push(href));
         }}
       >
         Restore demo scenario

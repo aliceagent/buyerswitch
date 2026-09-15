@@ -199,11 +199,13 @@ interface UiState {
   theme: "light" | "dark";
   storageError: string | null;
   temporarySession: boolean;
+  tourDismissed: boolean;
   setDensity: (d: UiState["density"]) => void;
   setFastMode: (v: boolean) => void;
   setSentimentAbsolute: (v: boolean) => void;
   setStorageError: (v: string | null) => void;
   setTemporary: (v: boolean) => void;
+  dismissTour: () => void;
 }
 
 export const useUiStore = create<UiState>()(
@@ -216,13 +218,15 @@ export const useUiStore = create<UiState>()(
       theme: "light",
       storageError: null,
       temporarySession: false,
+      tourDismissed: false,
       setDensity: (density) => set({ density }),
       setFastMode: (fastMode) => set({ fastMode }),
       setSentimentAbsolute: (sentimentAbsolute) => set({ sentimentAbsolute }),
       setStorageError: (storageError) => set({ storageError }),
       setTemporary: (temporarySession) => set({ temporarySession }),
+      dismissTour: () => set({ tourDismissed: true }),
     }),
-    { name: "bs.ui", version: 2, skipHydration: true, storage: createJSONStorage(() => localStorage) },
+    { name: "bs.ui", version: 3, skipHydration: true, storage: createJSONStorage(() => localStorage) },
   ),
 );
 

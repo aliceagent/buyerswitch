@@ -13,6 +13,8 @@ import type {
   Quote,
   QuoteRow,
   RadarFinding,
+  EvidenceDisplay,
+  TopicEntityBar,
   Review,
   ReviewOccurrence,
   ReviewRow,
@@ -727,7 +729,7 @@ export class QueryEngine {
             score,
             operands: { sMe, sC, mC },
             denominators: { entityN: me.distinct, categoryN: cat.distinct },
-            statement: `${entityName(this.corpus, ctx, focalParsed)} leads the category on ${topic.name} by ${(sMe - sC).toFixed(1)} points (priority heuristic).`,
+            statement: `${entityName(this.corpus, ctx, focalParsed)} leads the category on ${topic.name} by ${(sMe - sC).toFixed(1)} points.`,
             ctx,
             filter: baseFilter,
             unitsMe: meUnits,
@@ -850,6 +852,63 @@ export class QueryEngine {
       if (!existing) bestByPanelTopic.set(key, f);
     }
     return wrap(ctx, filter, meUnits, { findings: [...bestByPanelTopic.values()], banners });
+  }
+
+  getEvidencePack(finding: RadarFinding): EvidenceDisplay[] {
+    const rows: EvidenceDisplay[] = [];
+    for (const ref of finding.evidence) {
+      const review = this.reviewById.get(ref.reviewId);
+      if (!review) continue;
+      const quote = review.quotes.find((q) => q.id === ref.quoteId);
+      if (!quote) continue;
+      const product = this.productById.get(review.productId);
+      const brand = product ? this.corpus.brands.find((b) => b.id === product.brandId) : undefined;
+      const parsed = parseEntityId(ref.entityId);
+      const name =
+        (parsed && parsed.kind === "brand"
+          ? this.corpus.brands.find((b) => b.id === parsed.id)?.name
+          : undefined) ??
+        brand?.name ??
+        ref.entityId.replace(/^b:/, "");
+      rows.push({
+        quoteId: quote.id,
+        reviewId: review.id,
+        entityId: ref.entityId,
+        entityName: name,
+        quoteText: quote.text || review.text.slice(quote.charStart, quote.charEnd),
+        reviewText: review.text,
+        charStart: quote.charStart,
+        charEnd: quote.charEnd,
+        stars: review.stars,
+        source: review.source,
+        postDate: review.postDate,
+      });
+    }
+    return rows;
+  }
+
+  getTopicEntityBars(
+    ctx: QueryContext,
+    filter: FilterState,
+    topicId: string,
+    entityIds: string[],
+  ): QueryResult<TopicEntityBar[]> {
+    const baseFilter = { ...cloneFilter(filter), brandIds: [], productIds: [], groupIds: [] };
+    const rows: TopicEntityBar[] = [];
+    for (const eid of entityIds) {
+      const parsed = parseEntityId(eid);
+      if (!parsed) continue;
+      const units = this.units(ctx, baseFilter, { ignoreEntityFilters: true, requireEntityId: parsed });
+      const stats = this.topicStats(ctx, units).get(topicId);
+      rows.push({
+        entityId: eid,
+        name: entityName(this.corpus, ctx, parsed),
+        mentionShare: stats?.mentionShare ?? null,
+        sentiment: stats?.sentiment ?? null,
+        distinctReviewN: stats?.distinct ?? 0,
+      });
+    }
+    return wrap(ctx, filter, this.units(ctx, baseFilter, { ignoreEntityFilters: true }), rows);
   }
 
   search(ctx: QueryContext, filter: FilterState, term: string): QueryResult<{

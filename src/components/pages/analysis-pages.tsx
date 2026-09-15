@@ -2,20 +2,17 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { query } from "@/lib/query";
 import { DemoGate } from "@/components/layout/demo-gate";
 import { useFilters } from "@/components/filters/filter-bar";
 import { KpiStrip, WidgetCard } from "@/components/widgets/kpi-strip";
-import { EmptyState, LoadingState } from "@/components/brand/primitives";
 import { formatPercent, SOURCE_LABELS } from "@/lib/format";
 import { ENTITY_COLORS_LIGHT, INDUSTRY_COLOR } from "@/lib/chart-colors";
-import { useDraftStore, useViewsStore } from "@/stores/app-stores";
 import type { QueryContext, RadarFinding, TopicRow } from "@/types";
-import { Button } from "@/components/ui/button";
-import { exportExcel } from "@/lib/excel-export";
-import { exportPptx } from "@/lib/pptx-export";
+import { EvidenceCard } from "@/components/pages/radar-page";
+import { cleanStatement, pickHeroFinding } from "@/lib/radar-helpers";
 
 export function TopicsPage() {
   return <DemoGate>{({ ctx }) => <TopicsInner ctx={ctx} />}</DemoGate>;
@@ -153,181 +150,6 @@ function TopicDetailInner({ ctx }: { ctx: QueryContext }) {
   );
 }
 
-export function RadarPage() {
-  return <DemoGate>{({ ctx }) => <RadarInner ctx={ctx} />}</DemoGate>;
-}
-
-const EMPTY_DRAFTS: Record<string, { hypothesis: string; ownerRole: string; test: string; successMetric: string }> = {};
-
-function RadarInner({ ctx }: { ctx: QueryContext }) {
-  const { filter, cmp, apply } = useFilters();
-  const sp = useSearchParams();
-  const briefHref = `/switch-radar/brief${sp.toString() ? `?${sp.toString()}` : ""}`;
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    let live = true;
-    void query.ensure().then(() => {
-      if (live) setReady(true);
-    });
-    return () => {
-      live = false;
-    };
-  }, []);
-  const data = ready
-    ? query.getSwitchRadar(ctx, filter, { entityIds: cmp }).data
-    : null;
-  const userId = ctx.userId;
-  const saveDraft = useDraftStore((s) => s.save);
-  const drafts = useDraftStore((s) => s.byUser[userId] ?? EMPTY_DRAFTS);
-  const saveView = useViewsStore((s) => s.save);
-  const labels: Record<RadarFinding["panel"], string> = {
-    strength: "Our relative strengths",
-    complaint: "Complaints linked to low ratings",
-    opportunity: "Competitor weaknesses to investigate",
-    exposure: "Our competitive exposure",
-  };
-  const panels: RadarFinding["panel"][] = ["strength", "complaint", "opportunity", "exposure"];
-  if (!data) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-xl font-semibold text-navy">Switch Radar</h1>
-        <LoadingState label="Ranking synthetic findings…" />
-      </div>
-    );
-  }
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-xl font-semibold text-navy">Switch Radar</h1>
-        </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => exportExcel(ctx, filter, cmp)}>
-            Download Excel
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => exportPptx(ctx, filter, cmp)}>
-            Download PowerPoint
-          </Button>
-          <Link href={briefHref} className="rounded border border-border px-3 py-1 text-[13px]">
-            Print brief
-          </Link>
-        </div>
-      </div>
-      {data?.banners.map((b) => (
-        <p key={b} className="text-[12px] text-ink-muted">
-          {b}
-        </p>
-      ))}
-      {filter.topicIds.length > 0 && (
-        <Button size="sm" variant="outline" onClick={() => apply({ ...filter, topicIds: [] }, cmp)}>
-          Use full category topic scope
-        </Button>
-      )}
-      <div className="grid gap-4 lg:grid-cols-2">
-        {panels.map((panel) => {
-          const items = (data?.findings ?? []).filter((f) => f.panel === panel);
-          return (
-            <WidgetCard key={panel} title={labels[panel]}>
-              {items.length === 0 ? (
-                <EmptyState
-                  title="No findings meet the current evidence and gap thresholds."
-                  body="Try a wider date range or fewer filters. Insufficient evidence is a result, not a missing chart."
-                />
-              ) : (
-                <ul className="space-y-3">
-                  {items.map((f) => (
-                    <li key={f.id} className="rounded border border-border p-2">
-                      <div className="font-medium">{f.statement}</div>
-                      <div className="text-[11px] text-ink-muted">
-                        Priority heuristic {f.priorityScore.toFixed(2)} · n={f.denominators.entityN ?? f.denominators.lowN} distinct reviews
-                      </div>
-                      <details className="mt-1">
-                        <summary>Selected illustrative examples</summary>
-                        <EvidenceList finding={f} ctx={ctx} filter={filter} />
-                      </details>
-                      <details className="mt-1">
-                        <summary>Draft an action hypothesis</summary>
-                        <textarea
-                          className="mt-1 w-full rounded border border-border p-2"
-                          defaultValue={drafts[f.id]?.hypothesis ?? f.nextStep.hypothesis}
-                          onBlur={(e) =>
-                            saveDraft(userId, f.id, {
-                              hypothesis: e.target.value,
-                              ownerRole: f.nextStep.ownerRole,
-                              test: f.nextStep.test,
-                              successMetric: f.nextStep.successMetric,
-                            })
-                          }
-                        />
-                        <p className="text-[11px] text-ink-muted">Saved locally. Nothing was sent to a team. No sales lift is estimated.</p>
-                      </details>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </WidgetCard>
-          );
-        })}
-      </div>
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() =>
-          saveView(ctx.userId, ctx.workspace.id, {
-            id: `view-${Date.now()}`,
-            name: "Custom view",
-            filters: filter,
-            cmp,
-            mode: ctx.workspace.reviewMode,
-            datasetVersion: ctx.datasetVersion,
-            workspaceId: ctx.workspace.id,
-          })
-        }
-      >
-        Save view
-      </Button>
-    </div>
-  );
-}
-
-function EvidenceList({
-  finding,
-  ctx,
-  filter,
-}: {
-  finding: RadarFinding;
-  ctx: QueryContext;
-  filter: QueryContext extends never ? never : import("@/types").FilterState;
-}) {
-  const [rows, setRows] = useState<string[]>([]);
-  useEffect(() => {
-    void query.ensure().then(() => {
-      const page = query.getQuotes(ctx, finding.effectiveFilter, {
-        page: 1,
-        pageSize: 50,
-        topicId: finding.topicId,
-      }).data.rows;
-      const texts = finding.evidence.map((e) => {
-        const hit = page.find((r) => r.quote.id === e.quoteId);
-        return hit ? `${e.entityId}: ${hit.quote.text}` : `Missing quote ${e.quoteId}`;
-      });
-      setRows(texts);
-    });
-  }, [finding, ctx, filter]);
-  return (
-    <ul className="mt-1 list-disc pl-5 text-[12px]">
-      {rows.map((t) => (
-        <li key={t}>{t}</li>
-      ))}
-      <li>
-        <Link className="text-lightblue" href={`/topics/${finding.topicId}`}>
-          View full illustrative review
-        </Link>
-      </li>
-    </ul>
-  );
-}
-
 export function ComparisonPage() {
   return <DemoGate>{({ ctx }) => <ComparisonInner ctx={ctx} />}</DemoGate>;
 }
@@ -374,8 +196,17 @@ function ComparisonInner({ ctx }: { ctx: QueryContext }) {
                 </td>
                 {data?.columns.map((c) => {
                   const cell = c.topicRows.find((r) => r.topicId === t.topicId);
+                  const hot = t.topicId === "ergonomics";
+                  const tone = cell?.sentiment ?? 0;
+                  const bg = cell == null || cell.support === "none" || cell.sentiment === null
+                    ? undefined
+                    : `rgba(0, 156, 189, ${Math.min(0.55, tone / 180)})`;
                   return (
-                    <td key={c.entityId} className="p-2 tabular">
+                    <td
+                      key={c.entityId}
+                      className={`p-2 tabular ${hot ? "font-medium" : ""}`}
+                      style={{ background: bg }}
+                    >
                       {cell == null || cell.support === "none" || cell.sentiment === null
                         ? "Insufficient evidence"
                         : `${cell.sentiment.toFixed(0)}% · ${formatPercent(cell.mentionShare)}`}
@@ -431,28 +262,33 @@ function BriefInner({ ctx }: { ctx: QueryContext }) {
     void query.ensure().then(() => setData(query.getSwitchRadar(ctx, filter, { entityIds: cmp }).data));
   }, [ctx, filter, cmp]);
   const pick = (panel: RadarFinding["panel"]) => data?.findings.find((f) => f.panel === panel);
-  const findings = ["strength", "complaint", "opportunity", "exposure"].map((p) => pick(p as RadarFinding["panel"]));
-  const excerpts = findings.flatMap((f) => f?.evidence ?? []).slice(0, 2);
+  const findings = ["exposure", "opportunity", "complaint", "strength"].map((p) => pick(p as RadarFinding["panel"]));
+  const hero = data ? pickHeroFinding(data.findings) : null;
+  const excerpts = hero && data ? query.getEvidencePack(hero).slice(0, 2) : [];
+  const next = hero?.nextStep ?? findings.find(Boolean)?.nextStep;
   return (
     <div className="mx-auto max-w-[800px] space-y-4 print:max-w-none">
       <h1 className="text-2xl font-semibold text-navy">Switch Brief</h1>
       <p className="text-[12px]">Synthetic demo — illustrative findings; not evidence of real brand performance</p>
       <p className="text-[12px]">
-        {filter.dateFrom}–{filter.dateTo} · {ctx.workspace.reviewMode} · snapshot local · dataset {ctx.datasetVersion}
+        {filter.dateFrom}–{filter.dateTo} · {ctx.workspace.reviewMode} · brands {cmp.join(", ")} · dataset {ctx.datasetVersion}
       </p>
       <ol className="list-decimal space-y-2 pl-5">
         {findings.map((f, i) => (
-          <li key={i}>{f?.statement ?? "No finding met evidence thresholds in this panel."}</li>
+          <li key={i}>{f ? cleanStatement(f.statement) : "No finding met evidence thresholds in this panel."}</li>
         ))}
       </ol>
       <h2 className="font-semibold">Excerpts</h2>
-      <ul>
-        {excerpts.map((e) => (
-          <li key={e.quoteId}>{e.quoteId}</li>
+      <div className="space-y-3">
+        {excerpts.map((row) => (
+          <EvidenceCard key={row.quoteId} row={row} />
         ))}
-      </ul>
+      </div>
       <h2 className="font-semibold">Suggested next step</h2>
-      <p>{findings.find(Boolean)?.nextStep.hypothesis}</p>
+      <p>{next?.hypothesis}</p>
+      <p className="text-[12px] text-ink-muted">
+        Owner: {next?.ownerRole} · {next?.test}
+      </p>
       <p className="text-[11px] text-ink-muted">
         Category benchmark includes selected brands. Reviews do not establish why non-buyers chose a competitor.
       </p>

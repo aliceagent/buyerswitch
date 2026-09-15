@@ -18,12 +18,19 @@ const EMPTY_VIEWS: SavedView[] = [];
 
 const NAV = [
   { href: "/switch-radar", label: "Switch Radar" },
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/topics", label: "Topics" },
   { href: "/comparison", label: "Comparison" },
+  { href: "/topics", label: "Topics" },
+  { href: "/dashboard", label: "Dashboard" },
+];
+
+const MORE = [
   { href: "/star-rating", label: "Star rating" },
   { href: "/products", label: "Catalogue" },
   { href: "/reviews", label: "Reviews" },
+  { href: "/settings/workspace", label: "Workspace" },
+  { href: "/settings/groups", label: "Groups" },
+  { href: "/settings/users", label: "Users" },
+  { href: "/settings/qa", label: "Data QA" },
 ];
 
 export function AppShell({
@@ -66,19 +73,20 @@ export function AppShell({
               {item.label}
             </Link>
           ))}
-          <div className="mt-4 px-3 text-[10px] uppercase tracking-wide text-white/50">Settings</div>
-          <Link href={hrefWithState("/settings/workspace")} className="rounded px-3 py-2 text-[13px] text-white/80 hover:bg-white/10">
-            Workspace
-          </Link>
-          <Link href={hrefWithState("/settings/groups")} className="rounded px-3 py-2 text-[13px] text-white/80 hover:bg-white/10">
-            Groups
-          </Link>
-          <Link href={hrefWithState("/settings/users")} className="rounded px-3 py-2 text-[13px] text-white/80 hover:bg-white/10">
-            Users
-          </Link>
-          <Link href={hrefWithState("/settings/qa")} className="rounded px-3 py-2 text-[13px] text-white/80 hover:bg-white/10">
-            Data QA
-          </Link>
+          <details className="mt-4 px-1">
+            <summary className="cursor-pointer px-2 py-1 text-[10px] uppercase tracking-wide text-white/50">More</summary>
+            <div className="mt-1 flex flex-col gap-0.5">
+              {MORE.map((item) => (
+                <Link
+                  key={item.href}
+                  href={hrefWithState(item.href)}
+                  className="rounded px-3 py-2 text-[13px] text-white/80 hover:bg-white/10"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </details>
         </nav>
         <div className="space-y-1 p-3 text-[11px] text-white/60">
           <Link href={hrefWithState("/switch-radar/brief")} className="block hover:text-white">

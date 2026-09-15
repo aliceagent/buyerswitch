@@ -1,23 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuthStore } from "@/stores/auth";
-import { useWorkspaceStore } from "@/stores/workspace";
-import { useViewsStore, useQaStore, useUiStore, useBillingStore, useTeamStore, useDraftStore } from "@/stores/app-stores";
+import { usePathname } from "next/navigation";
+import { useUiStore } from "@/stores/app-stores";
 import { Button } from "@/components/ui/button";
-
-const stores = [
-  useAuthStore,
-  useWorkspaceStore,
-  useViewsStore,
-  useQaStore,
-  useUiStore,
-  useBillingStore,
-  useTeamStore,
-  useDraftStore,
-];
+import { persistStores, MARKETING_PATHS } from "@/lib/hydrate";
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const marketing = MARKETING_PATHS.has(pathname);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const storageError = useUiStore((s) => s.storageError);
@@ -27,7 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        for (const store of stores) {
+        for (const store of persistStores) {
           await store.persist.rehydrate();
         }
         if (!cancelled) setReady(true);
@@ -45,7 +36,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  if (!ready) {
+  if (!ready && !marketing) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface-muted text-navy">
         Restoring this browser session…
@@ -53,7 +44,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (storageError && !temporary) {
+  if (storageError && !temporary && !marketing) {
     return (
       <div className="mx-auto max-w-lg p-8">
         <h1 className="text-xl font-semibold text-navy">Storage problem</h1>
@@ -77,7 +68,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {(temporary || error) && (
+      {ready && (temporary || error) && (
         <div className="bg-marigold px-4 py-2 text-center text-navy">
           Temporary session — changes may not persist in this browser.
         </div>

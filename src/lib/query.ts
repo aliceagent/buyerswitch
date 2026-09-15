@@ -240,6 +240,17 @@ export const query = {
     cacheSet(k, res);
     return res;
   },
+  getEvidencePack(finding: Parameters<QueryEngine["getEvidencePack"]>[0]) {
+    return requireEngine().getEvidencePack(finding);
+  },
+  getTopicEntityBars(ctx: QueryContext, f: FilterState, topicId: string, entityIds: string[]) {
+    const k = keyOf(ctx, "topicBars", f, topicId + JSON.stringify(entityIds));
+    const hit = cacheGet<ReturnType<QueryEngine["getTopicEntityBars"]>["data"]>(k);
+    if (hit) return hit;
+    const res = requireEngine().getTopicEntityBars(ctx, f, topicId, entityIds);
+    cacheSet(k, res);
+    return res;
+  },
   search(ctx: QueryContext, f: FilterState, term: string) {
     const k = keyOf(ctx, "search", f, term);
     const hit = cacheGet<ReturnType<QueryEngine["search"]>["data"]>(k);
